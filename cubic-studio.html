@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cubic Studio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600;700&family=Lato:wght@300;400&display=swap');
+
+:root{ --gold:#c9a84c; --goldl:#e8c97a; --blk:#080808; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:var(--blk);color:#fff;font-family:'Lato',Georgia,sans-serif}
+
+#bg{position:fixed;inset:0;z-index:0;
+  background:url('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1800') center/cover no-repeat;
+  filter:brightness(0.13) saturate(0.5)}
+
+#pts{position:fixed;inset:0;z-index:50;pointer-events:none;overflow:hidden}
+.pt{position:absolute;border-radius:50%;opacity:0;
+  animation:ptUp var(--d) ease-in var(--dl) infinite}
+@keyframes ptUp{
+  0%  {opacity:0;transform:translate(0,0) scale(1)}
+  15% {opacity:var(--op)}
+  85% {opacity:calc(var(--op)*0.6)}
+  100%{opacity:0;transform:translate(var(--x),var(--y)) scale(0.1)}
+}
+
+#sflash{position:fixed;inset:0;z-index:1000;background:#fff;opacity:0;pointer-events:none}
+#sflash.pop{animation:sfpop 0.4s ease-out forwards}
+@keyframes sfpop{0%{opacity:0.9}100%{opacity:0}}
+
+.pg{
+  position:fixed;inset:0;z-index:10;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transform:translateY(40px) scale(0.98);
+  filter:blur(6px);
+  transition:opacity 0.65s cubic-bezier(0.22,1,0.36,1),
+             transform 0.65s cubic-bezier(0.22,1,0.36,1),
+             filter 0.65s ease;
+  will-change:opacity,transform,filter;
+}
+
+#pg-load{
+  flex-direction:column;
+  background:var(--blk);
+  z-index:200;
+  opacity:1 !important;
+  pointer-events:all !important;
+  transform:none !important;
+  filter:none !important;
+}
+#pg-load.hide{
+  opacity:0 !important;
+  transform:translateY(-32px) scale(1.02) !important;
+  filter:blur(8px) !important;
+  transition:opacity 0.65s cubic-bezier(0.4,0,1,1),
+             transform 0.65s cubic-bezier(0.4,0,1,1),
+             filter 0.65s ease !important;
+  pointer-events:none !important;
+}
+
+.pg.show{
+  opacity:1;
+  pointer-events:all;
+  transform:translateY(0) scale(1) !important;
+  filter:blur(0px);
+}
+.pg.exit-up{
+  opacity:0 !important;
+  transform:translateY(-40px) scale(0.97) !important;
+  filter:blur(5px) !important;
+  pointer-events:none !important;
+  transition:opacity 0.34s cubic-bezier(0.4,0,1,1),
+             transform 0.34s cubic-bezier(0.4,0,1,1),
+             filter 0.34s ease !important;
+}
+.pg.enter-from-below{
+  transform:translateY(50px) scale(0.97);
+  filter:blur(6px);
+  opacity:0;
+}
+
+.lcam{width:86px;height:86px}
+.cwrap{position:relative;margin-bottom:42px}
+.cring{position:absolute;inset:-15px;border-radius:50%;
+  border:2px solid var(--gold);opacity:0;transform:scale(0.8)}
+.cwrap.flash .cring{animation:cringAnim 0.5s ease-out forwards}
+@keyframes cringAnim{
+  0%  {opacity:1;transform:scale(0.8)}
+  60% {opacity:0.9;transform:scale(1.5)}
+  100%{opacity:0;transform:scale(2)}
+}
+.bwrap{width:255px;display:flex;flex-direction:column;align-items:center;gap:11px}
+.btrack{width:100%;height:2px;background:rgba(201,168,76,0.1);border-radius:2px;overflow:hidden}
+.bfill{height:100%;width:0%;
+  background:linear-gradient(90deg,var(--gold),var(--goldl));
+  box-shadow:0 0 12px var(--gold);transition:width 0.1s linear}
+.bpct{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--gold);opacity:0.84}
+.blbl{font-family:'Cinzel',serif;font-size:9px;letter-spacing:6px;color:rgba(201,168,76,0.42)}
+
+#pg-splash{flex-direction:column;text-align:center;padding:24px}
+.btitle{
+  font-family:'Cinzel',serif;font-size:clamp(2.8rem,9vw,5rem);
+  font-weight:700;letter-spacing:0.24em;line-height:1;
+  background:linear-gradient(135deg,#9a6e1a 0%,#e8c97a 40%,#c9a84c 68%,#7a5010 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.tagline{
+  font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;
+  font-size:clamp(0.95rem,2.8vw,1.2rem);color:rgba(255,255,255,0.38);
+  max-width:360px;line-height:1.9;margin-bottom:50px;
+}
+.orn{width:110px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  margin:0 auto 28px;opacity:0.42}
+.bbtn{
+  position:relative;padding:15px 54px;
+  border:1px solid rgba(201,168,76,0.42);
+  background:rgba(201,168,76,0.07);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:var(--goldl);font-family:'Cinzel',serif;
+  font-size:0.84rem;letter-spacing:0.3em;
+  cursor:pointer;border-radius:50px;overflow:hidden;
+  transition:border-color 0.3s,box-shadow 0.3s,transform 0.2s;outline:none;
+}
+.bbtn:hover{border-color:var(--gold);box-shadow:0 0 32px rgba(201,168,76,0.2);transform:translateY(-2px)}
+.bbtn:active{transform:scale(0.97)}
+.rpl{
+  position:absolute;border-radius:50%;
+  background:rgba(201,168,76,0.28);
+  transform:scale(0);animation:rplAnim 0.6s linear;pointer-events:none;
+}
+@keyframes rplAnim{to{transform:scale(4);opacity:0}}
+
+#pg-book{align-items:flex-start;overflow-y:auto;padding:20px}
+.fcard{
+  background:rgba(5,5,5,0.82);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border:1px solid rgba(201,168,76,0.14);border-radius:26px;
+  padding:clamp(24px,5vw,44px);width:100%;max-width:490px;
+  box-shadow:0 40px 80px rgba(0,0,0,0.75),inset 0 1px 0 rgba(201,168,76,0.09);
+  margin:auto;
+}
+.ftitle{font-family:'Cinzel',serif;font-size:1.3rem;letter-spacing:0.24em;color:var(--gold);text-align:center;margin-bottom:4px}
+.fsub{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:0.92rem;color:rgba(255,255,255,0.27);text-align:center;margin-bottom:24px;letter-spacing:0.1em}
+.slbl{
+  font-family:'Cinzel',serif;font-size:0.63rem;letter-spacing:0.28em;
+  color:var(--gold);opacity:0.7;margin:18px 0 11px;text-transform:uppercase;
+  display:flex;align-items:center;gap:9px;
+}
+.slbl::before,.slbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.24))}
+.slbl::after{background:linear-gradient(270deg,transparent,rgba(201,168,76,0.24))}
+.fw{position:relative;margin-bottom:10px}
+.fw input,.fw select{
+  width:100%;padding:12px 14px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.16);
+  border-radius:10px;color:#fff;font-family:'Lato',Georgia,sans-serif;
+  font-size:0.86rem;letter-spacing:0.04em;outline:none;
+  transition:border-color 0.3s,box-shadow 0.3s,background 0.3s;
+  -webkit-appearance:none;appearance:none;
+}
+.fw input::placeholder{color:rgba(255,255,255,0.28)}
+.fw input:focus,.fw select:focus{
+  border-color:rgba(201,168,76,0.52);
+  background:rgba(201,168,76,0.05);
+  box-shadow:0 0 0 3px rgba(201,168,76,0.07);
+}
+.fw.err input,.fw.err select{border-color:rgba(255,60,60,0.6);box-shadow:0 0 0 3px rgba(255,60,60,0.07)}
+.emsg{font-size:0.69rem;color:#ff5f5f;margin-top:3px;padding-left:3px;display:none}
+.fw.err .emsg{display:block;animation:eShk 0.3s ease}
+@keyframes eShk{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.fw select option{background:#111}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sbtn{
+  width:100%;padding:14px;margin-top:22px;
+  background:linear-gradient(135deg,#7a5010,var(--gold),#c9a84c,#7a5010);
+  background-size:300% 300%;border:none;border-radius:12px;
+  color:#050505;font-family:'Cinzel',serif;font-size:0.85rem;
+  letter-spacing:0.22em;font-weight:700;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.3s;animation:shG 4s ease infinite;
+}
+@keyframes shG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.sbtn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(201,168,76,0.28)}
+.sbtn:active{transform:scale(0.98)}
+
+#pg-cd{flex-direction:column;text-align:center;padding:24px}
+.cdcard{
+  display:flex;flex-direction:column;align-items:center;
+  background:rgba(5,5,5,0.82);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
+  border:1px solid rgba(201,168,76,0.16);border-radius:30px;
+  padding:clamp(38px,7vw,60px) clamp(30px,6vw,56px);
+  max-width:400px;width:100%;
+  box-shadow:0 40px 80px rgba(0,0,0,0.75),inset 0 1px 0 rgba(201,168,76,0.1);
+}
+.cdprompt{font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.38em;color:rgba(201,168,76,0.5);margin-bottom:8px}
+.cdcheese{
+  font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;
+  font-size:clamp(1.8rem,5.5vw,3rem);color:var(--goldl);
+  letter-spacing:0.07em;margin-bottom:32px;
+  text-shadow:0 0 45px rgba(201,168,76,0.32);
+}
+.cdcam{margin-bottom:26px;animation:camPls 2s ease-in-out infinite}
+@keyframes camPls{
+  0%,100%{filter:drop-shadow(0 0 7px rgba(201,168,76,0.3))}
+  50%    {filter:drop-shadow(0 0 20px rgba(201,168,76,0.65))}
+}
+.cdnum{
+  font-family:'Cinzel',serif;font-size:clamp(4rem,11vw,6.5rem);
+  font-weight:700;color:var(--gold);line-height:1;min-height:1.1em;
+  text-shadow:0 0 55px rgba(201,168,76,0.48);
+}
+.cdnum.pop{animation:nPop 0.36s ease}
+@keyframes nPop{0%{transform:scale(1.5);opacity:0.3}65%{transform:scale(0.93)}100%{transform:scale(1);opacity:1}}
+.cdsub{font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.5em;color:rgba(201,168,76,0.38);margin-top:6px}
+.cdbarw{width:170px;margin-top:20px}
+.cdtrack{width:100%;height:2px;background:rgba(201,168,76,0.1);border-radius:2px;overflow:hidden}
+.cdfill{height:100%;width:100%;background:linear-gradient(90deg,var(--gold),var(--goldl));box-shadow:0 0 7px var(--gold);border-radius:2px;transition:width 0.94s linear}
+
+#pg-ty{flex-direction:column;text-align:center;padding:24px}
+.tycard{
+  background:rgba(5,5,5,0.83);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border:1px solid rgba(201,168,76,0.18);border-radius:30px;
+  padding:clamp(34px,6vw,56px) clamp(26px,5vw,50px);
+  max-width:450px;width:100%;
+  box-shadow:0 50px 100px rgba(0,0,0,0.82),inset 0 1px 0 rgba(201,168,76,0.12);
+}
+.tycam{margin-bottom:18px;animation:tyFlt 3.5s ease-in-out infinite}
+@keyframes tyFlt{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.tytitle{font-family:'Cinzel',serif;font-size:clamp(1.4rem,4vw,2rem);letter-spacing:0.2em;color:var(--gold);margin-bottom:7px}
+.tyname{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.45rem;color:var(--goldl);margin-bottom:17px}
+.tytext{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.04rem;line-height:1.95;color:rgba(255,255,255,0.46);margin-bottom:30px}
+.hbtn{
+  padding:11px 36px;border:1px solid rgba(201,168,76,0.36);
+  background:rgba(201,168,76,0.07);backdrop-filter:blur(10px);
+  color:var(--gold);border-radius:50px;font-family:'Cinzel',serif;
+  font-size:0.74rem;letter-spacing:0.27em;cursor:pointer;
+  transition:all 0.3s;outline:none;
+}
+.hbtn:hover{background:rgba(201,168,76,0.15);border-color:var(--gold);box-shadow:0 0 22px rgba(201,168,76,0.13)}
+
+.sg{opacity:0;transform:translateY(20px);transition:opacity 0.5s ease,transform 0.5s ease}
+.sg.in{opacity:1;transform:translateY(0)}
+
+input[type="date"]{color-scheme:dark;color:rgba(255,255,255,0.28)}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(0.34);cursor:pointer}
+input[type="date"].has-value{color:#fff}
+input[type="time"]{color-scheme:dark;color:rgba(255,255,255,0.28)}
+input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1) opacity(0.34);cursor:pointer}
+input[type="time"].has-value{color:#fff}
+::-webkit-scrollbar{width:3px}
+.tlbl{
+  font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.22em;
+  color:rgba(255,255,255,0.28);display:block;margin-bottom:4px;padding-left:2px;
+}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.2);border-radius:2px}
+
+/* ── Privacy Policy Page ── */
+#pg-pp{ align-items:flex-start; overflow-y:auto; padding:20px; }
+.ppcard{
+  background:rgba(5,5,5,0.88);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border:1px solid rgba(201,168,76,0.14);border-radius:26px;
+  padding:clamp(28px,5vw,46px);width:100%;max-width:500px;
+  box-shadow:0 40px 80px rgba(0,0,0,0.8),inset 0 1px 0 rgba(201,168,76,0.09);
+  margin:auto;
+}
+.pp-logo{
+  display:flex;flex-direction:column;align-items:center;margin-bottom:20px;
+}
+.pp-title{
+  font-family:'Cinzel',serif;font-size:1.1rem;letter-spacing:0.26em;
+  color:var(--gold);text-align:center;margin-bottom:3px;
+}
+.pp-subtitle{
+  font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;
+  font-size:0.85rem;color:rgba(255,255,255,0.25);text-align:center;
+  letter-spacing:0.1em;margin-bottom:20px;
+}
+.pp-divider{
+  width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,168,76,0.22),transparent);
+  margin-bottom:20px;
+}
+.pp-scroll{
+  max-height:300px;overflow-y:auto;margin-bottom:20px;
+  padding-right:6px;
+}
+.pp-scroll::-webkit-scrollbar{width:2px}
+.pp-scroll::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.25);border-radius:2px}
+.pp-section-title{
+  font-family:'Cinzel',serif;font-size:0.64rem;letter-spacing:0.28em;
+  color:var(--gold);opacity:0.75;margin:16px 0 7px;text-transform:uppercase;
+}
+.pp-section-title:first-child{ margin-top:0; }
+.pp-body{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:0.97rem;line-height:1.85;
+  color:rgba(255,255,255,0.42);margin-bottom:4px;
+}
+.pp-body strong{color:rgba(255,255,255,0.62);font-weight:600;}
+.pp-badge{
+  display:inline-block;padding:2px 9px;
+  background:rgba(201,168,76,0.09);border:1px solid rgba(201,168,76,0.2);
+  border-radius:20px;font-family:'Cinzel',serif;font-size:0.58rem;
+  letter-spacing:0.2em;color:var(--gold);margin-bottom:14px;
+}
+.pp-check-row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 14px;margin-bottom:12px;
+  background:rgba(201,168,76,0.04);
+  border:1px solid rgba(201,168,76,0.1);border-radius:12px;
+  cursor:pointer;transition:border-color 0.25s,background 0.25s;
+}
+.pp-check-row:hover{ border-color:rgba(201,168,76,0.26); background:rgba(201,168,76,0.07); }
+.pp-check-row.checked{ border-color:rgba(201,168,76,0.4); background:rgba(201,168,76,0.09); }
+.pp-checkbox{
+  width:18px;height:18px;border-radius:5px;flex-shrink:0;margin-top:2px;
+  border:1.5px solid rgba(201,168,76,0.35);background:rgba(201,168,76,0.04);
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.pp-check-row.checked .pp-checkbox{
+  background:var(--gold);border-color:var(--gold);
+}
+.pp-checkbox svg{ opacity:0; transition:opacity 0.15s; }
+.pp-check-row.checked .pp-checkbox svg{ opacity:1; }
+.pp-check-label{
+  font-family:'Lato',sans-serif;font-size:0.82rem;
+  color:rgba(255,255,255,0.48);line-height:1.55;
+}
+.pp-check-label a{
+  color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(201,168,76,0.3);
+}
+.pp-agree-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#7a5010,var(--gold),#c9a84c,#7a5010);
+  background-size:300% 300%;border:none;border-radius:12px;
+  color:#050505;font-family:'Cinzel',serif;font-size:0.82rem;
+  letter-spacing:0.22em;font-weight:700;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.3s,opacity 0.3s;
+  animation:shG 4s ease infinite;
+  opacity:0.35;pointer-events:none;
+}
+.pp-agree-btn.ready{
+  opacity:1;pointer-events:all;
+}
+.pp-agree-btn.ready:hover{ transform:translateY(-2px);box-shadow:0 12px 30px rgba(201,168,76,0.28); }
+.pp-agree-btn.ready:active{ transform:scale(0.98); }
+.pp-footer{
+  font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;
+  font-size:0.75rem;color:rgba(255,255,255,0.18);
+  text-align:center;margin-top:14px;line-height:1.6;
+}
+
+
+/* ── Multi-date slots ── */
+#dateSlots{ display:flex; flex-direction:column; gap:0; }
+
+.dslot{
+  position:relative;
+  border:1px solid rgba(201,168,76,0.13);
+  border-radius:14px;
+  padding:12px 12px 8px;
+  margin-bottom:10px;
+  background:rgba(201,168,76,0.03);
+  transition:border-color 0.3s, box-shadow 0.3s;
+  overflow:hidden;
+}
+.dslot.filled{
+  border-color:rgba(201,168,76,0.3);
+  background:rgba(201,168,76,0.06);
+  box-shadow:0 0 18px rgba(201,168,76,0.06);
+}
+.dslot-num{
+  font-family:'Cinzel',serif;font-size:0.55rem;letter-spacing:0.3em;
+  color:rgba(201,168,76,0.38);margin-bottom:8px;
+}
+.dslot-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.dslot-rm{
+  position:absolute;top:10px;right:10px;
+  width:20px;height:20px;border-radius:50%;
+  border:1px solid rgba(255,80,80,0.3);
+  background:rgba(255,80,80,0.07);
+  color:rgba(255,100,100,0.7);font-size:13px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;opacity:0;pointer-events:none;
+}
+.dslot:hover .dslot-rm{ opacity:1; pointer-events:all; }
+.dslot-rm:hover{ background:rgba(255,80,80,0.2); border-color:rgba(255,80,80,0.6); color:#ff6060; }
+
+/* ── Add date button row ── */
+.add-date-row{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:4px;margin-top:2px;
+}
+.add-date-btn{
+  position:relative;
+  width:34px;height:34px;border-radius:50%;
+  border:1.5px solid rgba(201,168,76,0.35);
+  background:rgba(201,168,76,0.07);
+  color:var(--gold);font-size:20px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.25s;outline:none;flex-shrink:0;
+  overflow:hidden;
+}
+.add-date-btn:hover{
+  border-color:var(--gold);
+  background:rgba(201,168,76,0.16);
+  box-shadow:0 0 16px rgba(201,168,76,0.22);
+  transform:scale(1.08);
+}
+.add-date-btn:active{ transform:scale(0.95); }
+.add-date-btn .plus-icon{ transition:transform 0.2s; }
+.add-date-btn:hover .plus-icon{ transform:rotate(90deg); }
+
+/* pulse signal ring on + button */
+.add-date-btn.pulse::before{
+  content:'';
+  position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid var(--gold);
+  animation:addPulse 1.2s ease-out infinite;
+}
+@keyframes addPulse{
+  0%  { opacity:0.8; transform:scale(1);   }
+  100%{ opacity:0;   transform:scale(1.9); }
+}
+.add-date-hint{
+  font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;
+  font-size:0.82rem;color:rgba(201,168,76,0.55);
+  opacity:0;transform:translateX(-6px);
+  transition:opacity 0.4s ease, transform 0.4s ease;
+  white-space:nowrap;
+}
+.add-date-hint.show{ opacity:1; transform:translateX(0); }
+
+/* slot slide-in + breathe animation */
+@keyframes slotIn{
+  0%  { opacity:0; transform:translateY(18px) scale(0.96); filter:blur(4px); }
+  60% { opacity:1; transform:translateY(-4px) scale(1.01); filter:blur(0px); }
+  80% { transform:translateY(2px) scale(0.995); }
+  100%{ opacity:1; transform:translateY(0) scale(1); filter:blur(0px); }
+}
+@keyframes slotBreathe{
+  0%,100%{ box-shadow:0 0 0px rgba(201,168,76,0); border-color:rgba(201,168,76,0.13); }
+  50%    { box-shadow:0 0 22px rgba(201,168,76,0.18); border-color:rgba(201,168,76,0.45); }
+}
+.dslot.new{
+  animation:
+    slotIn     0.55s cubic-bezier(0.22,1,0.36,1) forwards,
+    slotBreathe 1.6s ease-in-out 0.55s 3;
+}
+
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="pts"></div>
+<div id="sflash"></div>
+
+<!-- LOADER -->
+<div class="pg" id="pg-load">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="cwrap" id="lcw">
+      <div class="cring"></div>
+      <svg class="lcam" viewBox="0 0 96 80" fill="none">
+        <rect x="4" y="20" width="88" height="56" rx="10" stroke="#c9a84c" stroke-width="2.2" fill="none"/>
+        <path d="M32 20L36 8H60L64 20" stroke="#c9a84c" stroke-width="2" fill="none" stroke-linejoin="round"/>
+        <circle cx="48" cy="48" r="16" stroke="#c9a84c" stroke-width="2.2" fill="none"/>
+        <circle cx="48" cy="48" r="9" stroke="#c9a84c" stroke-width="1.5" fill="rgba(201,168,76,0.07)"/>
+        <circle cx="48" cy="48" r="4" fill="rgba(201,168,76,0.2)"/>
+        <circle cx="75" cy="32" r="4" stroke="#c9a84c" stroke-width="1.4" fill="none"/>
+        <circle cx="75" cy="32" r="1.6" fill="#c9a84c" opacity="0.5"/>
+        <line x1="14" y1="32" x2="22" y2="32" stroke="#c9a84c" stroke-width="1.2" opacity="0.32"/>
+        <line x1="14" y1="37" x2="20" y2="37" stroke="#c9a84c" stroke-width="1" opacity="0.2"/>
+      </svg>
+    </div>
+    <div class="bwrap">
+      <div class="btrack"><div class="bfill" id="bfill"></div></div>
+      <div class="bpct" id="bpct">0%</div>
+      <div class="blbl">LOADING EXPERIENCE</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PRIVACY POLICY -->
+<div class="pg" id="pg-pp" style="align-items:flex-start;overflow-y:auto">
+  <div class="ppcard">
+
+    <div class="sg pp-logo" style="transition-delay:0s">
+      <svg width="42" height="36" viewBox="0 0 96 80" fill="none" style="margin-bottom:10px">
+        <defs>
+          <linearGradient id="ppg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7a5010"/>
+            <stop offset="40%" stop-color="#e8c97a"/>
+            <stop offset="100%" stop-color="#9a6e1a"/>
+          </linearGradient>
+        </defs>
+        <rect x="4" y="20" width="88" height="56" rx="10" stroke="url(#ppg)" stroke-width="2.5" fill="rgba(201,168,76,0.05)"/>
+        <path d="M32 20L36 8H60L64 20" stroke="url(#ppg)" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+        <circle cx="48" cy="48" r="17" stroke="url(#ppg)" stroke-width="2.4" fill="none"/>
+        <circle cx="48" cy="48" r="9" stroke="url(#ppg)" stroke-width="1.6" fill="rgba(201,168,76,0.09)"/>
+        <circle cx="48" cy="48" r="4.5" fill="rgba(201,168,76,0.32)"/>
+        <circle cx="75" cy="32" r="4.5" stroke="url(#ppg)" stroke-width="1.5" fill="none"/>
+        <circle cx="75" cy="32" r="2" fill="#c9a84c" opacity="0.66"/>
+      </svg>
+      <p class="pp-title">CUBIC STUDIO</p>
+      <p class="pp-subtitle">Privacy &amp; Data Policy</p>
+      <span class="pp-badge">LAST UPDATED — 2025</span>
+    </div>
+
+    <div class="sg" style="transition-delay:0.08s">
+      <div class="pp-divider"></div>
+    </div>
+
+    <div class="sg" style="transition-delay:0.14s">
+      <div class="pp-scroll" id="ppScroll">
+
+        <p class="pp-section-title">Who We Are</p>
+        <p class="pp-body">
+          <strong>Cubic Studio</strong> is a professional photography and film production studio. This policy explains what personal data we collect when you make a booking through this app, how we use it, and your rights as a user.
+        </p>
+
+        <p class="pp-section-title">What Data We Collect</p>
+        <p class="pp-body">
+          When you submit a booking, we collect the following information you provide directly:
+          <br/><br/>
+          <strong>Client:</strong> First name, last name, mobile number, session date(s) and time slots.<br/>
+          <strong>Photographer:</strong> Name, mobile number, Instagram handle.<br/>
+          <strong>Model:</strong> Name, mobile number, Instagram handle.
+          <br/><br/>
+          We do <strong>not</strong> collect payment details, passwords, location data, or any sensitive personal information through this app.
+        </p>
+
+        <p class="pp-section-title">How We Use Your Data</p>
+        <p class="pp-body">
+          Your booking data is used solely to:
+          <br/>— Confirm and schedule your studio session<br/>
+          — Notify the studio owner of new bookings<br/>
+          — Contact you regarding your reservation
+          <br/><br/>
+          We do <strong>not</strong> sell, rent, or share your data with any third-party advertisers or marketing services.
+        </p>
+
+        <p class="pp-section-title">Where Your Data Is Stored</p>
+        <p class="pp-body">
+          Booking data is stored in a <strong>Google Sheet</strong> accessible only to the studio owner, using Google's secure infrastructure. Data is transmitted via an encrypted HTTPS connection. Google's own privacy policy applies to storage: <strong>policies.google.com</strong>
+        </p>
+
+        <p class="pp-section-title">How Long We Keep It</p>
+        <p class="pp-body">
+          Booking records are retained for up to <strong>12 months</strong> after your session date for scheduling reference and dispute resolution, then permanently deleted.
+        </p>
+
+        <p class="pp-section-title">Your Rights</p>
+        <p class="pp-body">
+          You have the right to request access to, correction of, or deletion of your personal data at any time. To exercise these rights, contact us directly through the studio's official communication channels. Requests are processed within <strong>7 business days</strong>.
+        </p>
+
+        <p class="pp-section-title">Contact</p>
+        <p class="pp-body">
+          For any privacy-related questions, reach out to <strong>Cubic Studio</strong> directly. By proceeding, you confirm you are <strong>18 years or older</strong> or have parental consent.
+        </p>
+
+      </div>
+    </div>
+
+    <div class="sg" style="transition-delay:0.2s">
+      <div class="pp-check-row" id="ppRow1" onclick="toggleCheck('ppRow1','ppChk1')">
+        <div class="pp-checkbox" id="ppChk1">
+          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+            <path d="M1 4.5L4 7.5L10 1" stroke="#050505" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="pp-check-label">I have read and agree to the <strong>Privacy &amp; Data Policy</strong> of Cubic Studio. I consent to my booking information being stored and used as described above.</p>
+      </div>
+      <div class="pp-check-row" id="ppRow2" onclick="toggleCheck('ppRow2','ppChk2')">
+        <div class="pp-checkbox" id="ppChk2">
+          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+            <path d="M1 4.5L4 7.5L10 1" stroke="#050505" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="pp-check-label">I confirm that the information I provide is accurate and I am <strong>18 years or older</strong>, or have obtained parental consent.</p>
+      </div>
+    </div>
+
+    <div class="sg" style="transition-delay:0.28s">
+      <button class="pp-agree-btn" id="ppAgreBtn" onclick="acceptPrivacy()">
+        AGREE &amp; CONTINUE
+      </button>
+      <p class="pp-footer">
+        Declining means you cannot proceed with a booking.<br/>
+        Your data is never used for advertising purposes.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- SPLASH -->
+<div class="pg" id="pg-splash">
+  <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px">
+    <div class="sg" style="transition-delay:0s">
+      <p style="font-family:'Cinzel',serif;font-size:0.68rem;letter-spacing:0.55em;color:rgba(201,168,76,0.38);margin-bottom:14px">EST. 2024</p>
+    </div>
+    <div class="sg" style="transition-delay:0.1s">
+      <h1 class="btitle">CUBIC</h1>
+      <h1 class="btitle" style="margin-top:-0.13em">STUDIO</h1>
+    </div>
+    <div class="sg" style="transition-delay:0.2s">
+      <p style="font-family:'Cinzel',serif;font-size:0.66rem;letter-spacing:0.6em;color:rgba(201,168,76,0.28);margin:8px 0 32px">PHOTOGRAPHY &amp; FILM</p>
+    </div>
+    <div class="sg orn" style="transition-delay:0.28s"></div>
+    <div class="sg tagline" style="transition-delay:0.36s">
+      "Luxury is in each detail. We capture not just images, but emotions frozen in time."
+    </div>
+    <div class="sg" style="transition-delay:0.46s">
+      <button class="bbtn" onclick="goBook(this)">BOOK NOW</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING -->
+<div class="pg" id="pg-book" style="align-items:flex-start;overflow-y:auto">
+  <div class="fcard">
+    <div class="sg" style="transition-delay:0.04s">
+      <p class="ftitle">BOOKING DETAILS</p>
+      <p class="fsub">Complete your reservation</p>
+    </div>
+    <div class="sg" style="transition-delay:0.1s">
+      <div class="slbl">Client</div>
+      <div class="r2">
+        <div class="fw" id="ffn"><input type="text" id="iFirstName" placeholder="First Name"/><div class="emsg">Required</div></div>
+        <div class="fw" id="fln"><input type="text" id="iLastName"  placeholder="Last Name"/><div class="emsg">Required</div></div>
+      </div>
+      <div class="fw" id="fmob"><input type="tel" id="iMobile" placeholder="Mobile Number"/><div class="emsg">Enter valid number</div></div>
+      <div id="dateSlots"></div>
+      <div class="add-date-row">
+        <button class="add-date-btn" id="addDateBtn" onclick="addDateSlot()" title="Add another date">
+          <span class="plus-icon">+</span>
+        </button>
+        <span class="add-date-hint" id="addDateHint">Add another date</span>
+      </div>
+    </div>
+    <div class="sg" style="transition-delay:0.18s">
+      <div class="slbl">Photographer</div>
+      <div class="fw" id="fpn"><input type="text" id="iPName" placeholder="Photographer Name"/><div class="emsg">Required</div></div>
+      <div class="r2">
+        <div class="fw" id="fpm"><input type="tel"  id="iPMobile" placeholder="Mobile"/><div class="emsg">Required</div></div>
+        <div class="fw" id="fpi"><input type="text" id="iPInsta"  placeholder="@instagram"/><div class="emsg">Required</div></div>
+      </div>
+    </div>
+    <div class="sg" style="transition-delay:0.26s">
+      <div class="slbl">Model</div>
+      <div class="fw" id="fmn"><input type="text" id="iMName" placeholder="Model Name"/><div class="emsg">Required</div></div>
+      <div class="r2">
+        <div class="fw" id="fmm"><input type="tel"  id="iMMobile" placeholder="Mobile"/><div class="emsg">Required</div></div>
+        <div class="fw" id="fmi"><input type="text" id="iMInsta"  placeholder="@instagram"/><div class="emsg">Required</div></div>
+      </div>
+    </div>
+    <div class="sg" style="transition-delay:0.34s">
+      <button class="sbtn" onclick="doSubmit()">CONFIRM BOOKING</button>
+    </div>
+  </div>
+</div>
+
+<!-- COUNTDOWN -->
+<div class="pg" id="pg-cd">
+  <div class="cdcard">
+    <div class="sg" style="transition-delay:0s">
+      <p class="cdprompt">GET READY</p>
+      <p class="cdcheese" id="cdtxt">Say Cheeeeese!</p>
+    </div>
+    <div class="sg cdcam" style="transition-delay:0.1s">
+      <svg width="96" height="82" viewBox="0 0 96 80" fill="none">
+        <defs>
+          <linearGradient id="cg1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#7a5010"/>
+            <stop offset="38%" stop-color="#e8c97a"/>
+            <stop offset="68%" stop-color="#c9a84c"/>
+            <stop offset="100%" stop-color="#9a6e1a"/>
+          </linearGradient>
+          <filter id="cglow">
+            <feGaussianBlur stdDeviation="2.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect x="4" y="20" width="88" height="56" rx="10" stroke="url(#cg1)" stroke-width="2.6" fill="rgba(201,168,76,0.05)" filter="url(#cglow)"/>
+        <path d="M32 20L36 8H60L64 20" stroke="url(#cg1)" stroke-width="2.3" fill="none" stroke-linejoin="round"/>
+        <circle cx="48" cy="48" r="17" stroke="url(#cg1)" stroke-width="2.5" fill="none" filter="url(#cglow)"/>
+        <circle cx="48" cy="48" r="10" stroke="url(#cg1)" stroke-width="1.7" fill="rgba(201,168,76,0.1)"/>
+        <circle cx="48" cy="48" r="5" fill="rgba(201,168,76,0.38)"/>
+        <circle cx="75" cy="32" r="4.5" stroke="url(#cg1)" stroke-width="1.6" fill="none"/>
+        <circle cx="75" cy="32" r="2" fill="#c9a84c" opacity="0.72"/>
+        <ellipse cx="38" cy="38" rx="3.5" ry="1.6" fill="white" opacity="0.2" transform="rotate(-35 38 38)"/>
+      </svg>
+    </div>
+    <div class="sg" style="transition-delay:0.18s">
+      <div class="cdnum" id="cdnum">3</div>
+      <div class="cdsub">SECONDS</div>
+      <div class="cdbarw"><div class="cdtrack"><div class="cdfill" id="cdfill"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- THANK YOU -->
+<div class="pg" id="pg-ty">
+  <div class="tycard">
+    <div class="sg" style="transition-delay:0s">
+      <div class="tycam">
+        <svg width="78" height="66" viewBox="0 0 96 80" fill="none">
+          <defs>
+            <linearGradient id="tg1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7a5010"/>
+              <stop offset="40%" stop-color="#e8c97a"/>
+              <stop offset="70%" stop-color="#c9a84c"/>
+              <stop offset="100%" stop-color="#9a6e1a"/>
+            </linearGradient>
+            <filter id="tglow">
+              <feGaussianBlur stdDeviation="2.2" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <rect x="4" y="20" width="88" height="56" rx="10" stroke="url(#tg1)" stroke-width="2.5" fill="rgba(201,168,76,0.05)" filter="url(#tglow)"/>
+          <path d="M32 20L36 8H60L64 20" stroke="url(#tg1)" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+          <circle cx="48" cy="48" r="17" stroke="url(#tg1)" stroke-width="2.4" fill="none" filter="url(#tglow)"/>
+          <circle cx="48" cy="48" r="10" stroke="url(#tg1)" stroke-width="1.6" fill="rgba(201,168,76,0.09)"/>
+          <circle cx="48" cy="48" r="5" fill="rgba(201,168,76,0.34)"/>
+          <circle cx="75" cy="32" r="4.5" stroke="url(#tg1)" stroke-width="1.5" fill="none"/>
+          <circle cx="75" cy="32" r="2" fill="#c9a84c" opacity="0.66"/>
+          <ellipse cx="38" cy="38" rx="3" ry="1.5" fill="white" opacity="0.17" transform="rotate(-35 38 38)"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sg" style="transition-delay:0.1s">
+      <p class="tytitle">THANK YOU</p>
+      <p class="tyname" id="tyname"></p>
+    </div>
+    <div class="sg" style="transition-delay:0.2s">
+      <p class="tytext">Your booking request has been received.<br/>Our team will reach out to you within<br/><em>24 hours</em> to confirm your session.</p>
+    </div>
+    <div class="sg" style="transition-delay:0.3s">
+      <button class="hbtn" onclick="goHome()">RETURN HOME</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// --- Privacy Policy ---
+function toggleCheck(rowId, chkId){
+  const row = document.getElementById(rowId);
+  const chk = document.getElementById(chkId);
+  row.classList.toggle('checked');
+  chk.classList.toggle('checked');
+  updateAgreeBtn();
+}
+function updateAgreeBtn(){
+  const c1 = document.getElementById('ppRow1').classList.contains('checked');
+  const c2 = document.getElementById('ppRow2').classList.contains('checked');
+  const btn = document.getElementById('ppAgreBtn');
+  btn.classList.toggle('ready', c1 && c2);
+}
+function acceptPrivacy(){
+  const c1 = document.getElementById('ppRow1').classList.contains('checked');
+  const c2 = document.getElementById('ppRow2').classList.contains('checked');
+  if(!c1 || !c2) return;
+  localStorage.setItem('cs_privacy','1');
+  showPage('splash');
+}
+
+// check if already accepted (for PWA revisits)
+if(localStorage.getItem('cs_privacy')==='1'){
+  // will be handled after loader naturally shows splash
+  window._privacyDone = true;
+}
+
+// --- Particles ---
+(function(){
+  const c=document.getElementById('pts');
+  for(let i=0;i<80;i++){
+    const p=document.createElement('div');p.className='pt';
+    const sz=Math.random()*4+1.5;
+    const rand=Math.random();
+    let col;
+    if(rand<0.5) col=`rgba(201,168,76,${(Math.random()*0.7+0.4).toFixed(2)})`;
+    else if(rand<0.75) col=`rgba(232,201,122,${(Math.random()*0.6+0.35).toFixed(2)})`;
+    else col=`rgba(255,235,160,${(Math.random()*0.5+0.3).toFixed(2)})`;
+    p.style.cssText=`
+      width:${sz}px;height:${sz}px;
+      background:${col};
+      box-shadow:0 0 ${sz*3}px ${col};
+      left:${Math.random()*100}%;top:${(Math.random()*70+30)}%;
+      --x:${(Math.random()-0.5)*220}px;
+      --y:${-(Math.random()*380+100)}px;
+      --d:${(Math.random()*7+4).toFixed(1)}s;
+      --dl:${(Math.random()*7).toFixed(1)}s;
+      --op:${(Math.random()*0.6+0.4).toFixed(2)};
+    `;
+    c.appendChild(p);
+  }
+})();
+
+// --- Page State ---
+let cur='load';
+let transitioning=false;
+const pages=['load','pp','splash','book','cd','ty'];
+
+function showPage(id){
+  const incoming=document.getElementById('pg-'+id);
+  incoming.querySelectorAll('.sg').forEach(s=>s.classList.remove('in'));
+
+  const outgoing=pages
+    .filter(p=>p!=='load'&&p!==id)
+    .map(p=>document.getElementById('pg-'+p))
+    .find(el=>el.classList.contains('show'));
+
+  if(outgoing){
+    outgoing.classList.add('exit-up');
+    outgoing.classList.remove('show');
+    setTimeout(()=>{
+      outgoing.classList.remove('exit-up');
+      enterPage(incoming);
+    },340);
+  } else {
+    enterPage(incoming);
+  }
+  cur=id;
+}
+
+function enterPage(el){
+  el.classList.remove('show','exit-up','enter-from-below');
+  el.classList.add('enter-from-below');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    el.classList.remove('enter-from-below');
+    el.classList.add('show');
+    el.querySelectorAll('.sg').forEach((s,i)=>{
+      setTimeout(()=>s.classList.add('in'),120+i*85);
+    });
+  }));
+}
+
+// --- Loader ---
+(function(){
+  const fill=document.getElementById('bfill');
+  const pct=document.getElementById('bpct');
+  const cw=document.getElementById('lcw');
+  let p=0;
+  const steps=[
+    {to:22,ms:380},{to:51,ms:520},{to:78,ms:440},{to:94,ms:360},{to:100,ms:250}
+  ];
+  let si=0;
+  function runStep(){
+    if(si>=steps.length){done();return;}
+    const {to,ms}=steps[si++];
+    const from=p;const diff=to-from;
+    const start=performance.now();
+    function frame(now){
+      const t=Math.min((now-start)/ms,1);
+      p=from+diff*t;
+      fill.style.width=p+'%';
+      pct.textContent=Math.round(p)+'%';
+      if(t<1){requestAnimationFrame(frame);}
+      else{
+        // camera flash ring at certain milestones
+        if(p>=50||p>=100){cw.classList.add('flash');setTimeout(()=>cw.classList.remove('flash'),600);}
+        setTimeout(runStep,80);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  function done(){
+    setTimeout(()=>{
+      document.getElementById('pg-load').classList.add('hide');
+      showPage(window._privacyDone ? 'splash' : 'pp');
+    },300);
+  }
+  setTimeout(runStep,400);
+})();
+
+// --- Ripple ---
+function ripple(btn,e){
+  const r=document.createElement('span');r.className='rpl';
+  const rect=btn.getBoundingClientRect();
+  const sz=Math.max(rect.width,rect.height);
+  r.style.cssText=`width:${sz}px;height:${sz}px;left:${e.clientX-rect.left-sz/2}px;top:${e.clientY-rect.top-sz/2}px`;
+  btn.appendChild(r);
+  setTimeout(()=>r.remove(),700);
+}
+
+// --- Screen flash ---
+function flash(){
+  const f=document.getElementById('sflash');
+  f.classList.remove('pop');
+  void f.offsetWidth;
+  f.classList.add('pop');
+}
+
+// --- Go Book ---
+function goBook(btn){
+  if(btn)ripple(btn,event);
+  showPage('book');
+}
+
+// --- Validation ---
+function validate(){
+  const fields=[
+    {id:'ffn',val:()=>document.getElementById('iFirstName').value.trim()},
+    {id:'fln',val:()=>document.getElementById('iLastName').value.trim()},
+    {id:'fmob',val:()=>document.getElementById('iMobile').value.trim().length>=7},
+    {id:'fpn',val:()=>document.getElementById('iPName').value.trim()},
+    {id:'fpm',val:()=>document.getElementById('iPMobile').value.trim().length>=7},
+    {id:'fpi',val:()=>document.getElementById('iPInsta').value.trim()},
+    {id:'fmn',val:()=>document.getElementById('iMName').value.trim()},
+    {id:'fmm',val:()=>document.getElementById('iMMobile').value.trim().length>=7},
+    {id:'fmi',val:()=>document.getElementById('iMInsta').value.trim()},
+  ];
+  let ok=true;
+  fields.forEach(f=>{
+    const el=document.getElementById(f.id);
+    const v=f.val();
+    if(!v){el.classList.add('err');ok=false;}
+    else el.classList.remove('err');
+  });
+  // validate all date slots
+  document.querySelectorAll('.dslot').forEach(slot=>{
+    const dEl=slot.querySelector('.slot-date');
+    const fEl=slot.querySelector('.slot-from');
+    const tEl=slot.querySelector('.slot-to');
+    const dfw=slot.querySelector('.fw-date');
+    const ffw=slot.querySelector('.fw-from');
+    const tfw=slot.querySelector('.fw-to');
+    [dEl,fEl,tEl].forEach((inp,i)=>{
+      const fw=[dfw,ffw,tfw][i];
+      if(!inp.value){ fw.classList.add('err'); ok=false; }
+      else fw.classList.remove('err');
+    });
+  });
+  return ok;
+}
+
+// --- Submit ---
+function doSubmit(){
+  if(!validate())return;
+  const name=document.getElementById('iFirstName').value.trim();
+  showPage('cd');
+  setTimeout(()=>startCountdown(name),400);
+}
+
+// --- Countdown ---
+function startCountdown(name){
+  const numEl=document.getElementById('cdnum');
+  const fillEl=document.getElementById('cdfill');
+  let n=3;
+  numEl.textContent=n;
+  fillEl.style.width='100%';
+
+  const tick=()=>{
+    n--;
+    if(n<=0){
+      // flash shutter then slowly transition to thank you
+      const sf=document.getElementById('sflash');
+      sf.classList.remove('pop');void sf.offsetWidth;sf.classList.add('pop');
+      document.getElementById('tyname').textContent=
+        document.getElementById('iFirstName').value.trim()+' '+
+        document.getElementById('iLastName').value.trim();
+      setTimeout(()=>showPage('ty'), 900);
+      return;
+    }
+    numEl.classList.remove('pop');
+    void numEl.offsetWidth;
+    numEl.classList.add('pop');
+    numEl.textContent=n;
+    fillEl.style.width=(n/3*100)+'%';
+    setTimeout(tick,1000);
+  };
+  setTimeout(tick,1000);
+}
+
+// --- Date/Time colour feedback ---
+document.addEventListener('change',function(e){
+  if(e.target.type==='date'||e.target.type==='time'){
+    e.target.classList.toggle('has-value', e.target.value!=='');
+    checkSlotFilled(e.target.closest('.dslot'));
+  }
+});
+document.addEventListener('input',function(e){
+  if(e.target.type==='date'||e.target.type==='time'){
+    e.target.classList.toggle('has-value', e.target.value!=='');
+    checkSlotFilled(e.target.closest('.dslot'));
+  }
+});
+
+function checkSlotFilled(slot){
+  if(!slot) return;
+  const d=slot.querySelector('.slot-date').value;
+  const f=slot.querySelector('.slot-from').value;
+  const t=slot.querySelector('.slot-to').value;
+  const filled = d && f && t;
+  slot.classList.toggle('filled', !!filled);
+  // show pulse+hint on + button when first slot is fully filled
+  const btn=document.getElementById('addDateBtn');
+  const hint=document.getElementById('addDateHint');
+  const allSlots=document.querySelectorAll('.dslot');
+  const lastSlot=allSlots[allSlots.length-1];
+  const ld=lastSlot.querySelector('.slot-date').value;
+  const lf=lastSlot.querySelector('.slot-from').value;
+  const lt=lastSlot.querySelector('.slot-to').value;
+  if(ld && lf && lt){
+    btn.classList.add('pulse');
+    hint.classList.add('show');
+  } else {
+    btn.classList.remove('pulse');
+    hint.classList.remove('show');
+  }
+}
+
+// ── Multi-date slot system ──
+let slotCount = 0;
+
+function addDateSlot(){
+  slotCount++;
+  const idx = slotCount;
+  const container = document.getElementById('dateSlots');
+  const div = document.createElement('div');
+  div.className = 'dslot new';
+  div.dataset.slot = idx;
+  setTimeout(()=>div.classList.remove('new'), 400);
+
+  div.innerHTML = [
+    '<div class="dslot-num">DATE</div>',
+    (idx>1 ? '<button class="dslot-rm" onclick="removeDateSlot(this)" title="Remove">&#x2715;</button>' : ''),
+    '<div class="fw fw-date"><input type="date" class="slot-date"/><div class="emsg">Select date</div></div>',
+    '<div class="dslot-row">',
+      '<div class="fw fw-from"><span class="tlbl">From</span><input type="time" class="slot-from" step="3600"/><div class="emsg">Select start</div></div>',
+      '<div class="fw fw-to"><span class="tlbl">To</span><input type="time" class="slot-to" step="3600"/><div class="emsg">Select end</div></div>',
+    '</div>'
+  ].join('');
+  container.appendChild(div);
+
+  // remove pulse/hint since a new empty slot was added
+  document.getElementById('addDateBtn').classList.remove('pulse');
+  document.getElementById('addDateHint').classList.remove('show');
+}
+
+function removeDateSlot(btn){
+  const slot = btn.closest('.dslot');
+  slot.style.transition='opacity 0.25s ease, transform 0.25s ease';
+  slot.style.opacity='0';
+  slot.style.transform='translateY(-8px) scaleY(0.9)';
+  setTimeout(()=>{
+    slot.remove();
+    // re-check pulse state on last slot
+    const allSlots=document.querySelectorAll('.dslot');
+    if(allSlots.length) checkSlotFilled(allSlots[allSlots.length-1]);
+  }, 260);
+}
+
+// init first slot on load
+addDateSlot();
+
+// --- Home ---
+function goHome(){
+  // reset form
+  ['iFirstName','iLastName','iMobile','iDate','iPName','iPMobile','iPInsta','iMName','iMMobile','iMInsta'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value='';
+  });
+  // reset date slots
+  const ds=document.getElementById('dateSlots');
+  ds.innerHTML='';
+  slotCount=0;
+  addDateSlot();
+  document.querySelectorAll('.fw.err').forEach(el=>el.classList.remove('err'));
+  showPage('splash');
+}
+</script>
+</body>
+</html>
